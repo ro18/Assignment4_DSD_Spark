@@ -10,17 +10,17 @@ from pyspark.sql import DataFrame, SparkSession
 #####################################
 
 ### please update your relative path while running your code ###
-temp_airline_textfile = r"path/to/flights_data.txt"
+temp_airline_textfile = r"C:\Code\DSD\Assignment4_DSD_Spark\flights_data_c.txt"
 temp_airline_csvfile = r"path/to/flights_data.csv"
-default_spark_context = "local[*]"  # only update if you need
+#default_spark_context = "local[*]"  # only update if you need
 #######################################
 
 
 ### please don't update these lines ###
-load_dotenv()
+#load_dotenv()
 airline_textfile = os.getenv("AIRLINE_TXT_FILE", temp_airline_textfile)
 airline_csvfile = os.getenv("AIRLINE_CSV_FILE", temp_airline_csvfile)
-spark_context = os.getenv("SPARK_CONTEXT", default_spark_context)
+#spark_context = os.getenv("SPARK_CONTEXT", default_spark_context)
 #######################################
 
 
@@ -35,8 +35,46 @@ def co_occurring_airline_pairs_by_origin(flights_data: RDD) -> RDD:
                                 ((Airline_A,Airline_C),2),
                                 ((Airline_B,Airline_C),1)]
     """
+  
+    flights_mapped = flights_data.map(lambda x:  x.split(','))
+    
+    print("1")
+    print(flights_mapped.collect())
+    
+    
+    
+    
+    flight_pairs = flights_mapped.map(lambda flight: ((flight[0], flight[2]), flight[1]))
+    
+    print("2")
+    print(flight_pairs.collect())
+    
+#     flight_pairs_count = flight_pairs.flatMap(lambda x: [(tupple, 1) for tupple in x])
 
-    raise NotImplementedError("Your Implementation Here.")
+    
+#     print("3")
+#     print(flight_pairs_count.collect())
+    
+    
+    
+    flight_pair_addded=flight_pairs.groupByKey().mapValues(list).collect()
+    
+    print("3")
+    print(flight_pair_addded)
+    
+    # flight_reduced = flight_pairs.reduceByKey(lambda x, y: x)
+
+
+# # Group flights by date and origin
+# grouped_flights = flight_pairs.groupByKey()
+#     #flight_origin = flights_mapped.reduceByKey(lambda x, y: x+y)
+    
+#     print(flight_origin.collect())
+                                  
+                                              
+
+
+    
 
 
 def air_flights_most_canceled_flights(flights: DataFrame) -> str:
@@ -81,7 +119,9 @@ def air_flights_missing_departure_time(flights: DataFrame) -> int:
 
 def main():
     # initialize SparkContext and SparkSession
-    sc = SparkContext(spark_context)
+    #sc = SparkContext(spark_context)
+
+    sc = SparkContext.getOrCreate()
     spark = SparkSession.builder.getOrCreate()
 
     print("########################## Problem 1 ########################")
