@@ -1,14 +1,12 @@
+
 import os
 from itertools import permutations
 from dotenv import load_dotenv
 from pyspark import RDD, SparkContext
 from collections import Counter
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col,lit
-from pyspark.sql.functions import sum, col, desc
+from pyspark.sql.functions import col,desc,lit
 
-
-# from operator import add
 
 ### install dependency ###
 # pip install python-dotenv
@@ -18,18 +16,18 @@ from pyspark.sql.functions import sum, col, desc
 ### please update your relative path while running your code ###
 temp_airline_textfile = r'C:\Code\DSD\Assignment4_DSD_Spark\flights_data.txt'
 temp_airline_csvfile = r"C:\Code\DSD\Assignment4_DSD_Spark\Combined_Flights_2021.csv"
-# temp_airline_csvfile = r"C:\Code\DSD\Assignment4_DSD_Spark\TestFlights.csv"
+temp_airline_csvfile = r"C:\Code\DSD\Assignment4_DSD_Spark\TestFlights.csv"
 
 
-#default_spark_context = "local[*]"  # only update if you need
+default_spark_context = "local[*]"  # only update if you need
 #######################################
 
 
 ### please don't update these lines ###
-#load_dotenv()
+load_dotenv()
 airline_textfile = os.getenv("AIRLINE_TXT_FILE", temp_airline_textfile)
 airline_csvfile = os.getenv("AIRLINE_CSV_FILE", temp_airline_csvfile)
-#spark_context = os.getenv("SPARK_CONTEXT", default_spark_context)
+spark_context = os.getenv("SPARK_CONTEXT", default_spark_context)
 #######################################
 
 
@@ -44,163 +42,56 @@ def co_occurring_airline_pairs_by_origin(flights_data: RDD) -> RDD:
                                 ((Airline_A,Airline_C),2),
                                 ((Airline_B,Airline_C),1)]
     """
-  
+    
+    #Output Type:[(str, str, str)]
     flights_mapped = flights_data.map(lambda x:  x.split(','))
     
-#     print("1")
-#     print(flights_mapped.collect()) #one
-    
-    
-    
-    
+    #Output Type:[(str, str, [str])]
     flight_pairs = flights_mapped.map(lambda flight: ((flight[0], flight[2]), [ flight[1] ]))
-    
-#     print("2")
-#     print(flight_pairs.collect()) #two
-    
-# #     flight_pairs_reducer = flight_pairs.map(lambda x: [((tupple[0],tupple[1],tupple[2]), 1) for tupple in x])
-
-    
-# #     print("2.1")
-# #     print(flight_pairs_reducer.collect())
-
-
-    
-    
-    
-    
-#     flight_pair_list=flight_pairs.groupByKey().mapValues(list).collect()
-    
-#     print("3")
-#     print(flight_pair_list)
-    
-    
-# #     flight_pair_count_airlines = flight_pairs.groupByKey().countByValue().items()
-    
-    
-# #     print("4")
-# #     print(flight_pair_count_airlines)
-    
+        
     def countLen(x):
-        final_dict= Counter(x[1])
-        #return (x[0],list(final_dict.items())) # remove x[0] if you dont need
-        
-        #return (x[0],final_dict.most_common())
-        
-        return (x[0], Counter(x[1])) # remove x[0] if you dont need
+        final_dict= Counter(x[1])      
+        return (x[0], Counter(x[1]))
 
-        
-        
-    
-  
-
- 
- # Group flights by date and origin
-# grouped_flights = flight_pairs.groupByKey()
-#     flight_origin = flights_mapped.reduceByKey(lambda x, y: x+y)
-    
-#     print(flight_origin.collect())
-
+    #Output Type: [(str, str, [str,str ..])] 
     flight_reduced = flight_pairs.reduceByKey(lambda a, b: a + b)
     
+    #Outpur Type:  [(str, str, Counter({str: int , str : int ...}))] 
     flight_reduced_count = flight_reduced.map(countLen)
-    
-    #flight_reduced_count =  flight_reduced.countByValue().items()
-
-
-#     print("4")
-#     print(flight_reduced.collect()) #threee
-    
-#     print("5")
-#     print(flight_reduced_count.collect()) #four
-    
-#     print("5")
-#     flight_reduced_count = flight_reduced.map(countLen)
-
-    
-   
-    
-    
-#     print("6")
         
+    #Output Type:  [(str, str, Counter({str: int , str : int ...}))] 
     flight_filter_count = flight_reduced_count.filter(lambda x : len(x[1]) >1) ## filter rows with just one airline
-    
-  
-# print(flight_filter_count.collect()) #four
-    
-    
+
     def getPairs(x):
-        combination = [] # empty list 
+        combination = []  
         
-        final_pairs = {} #empty dict
+        final_pairs = {} 
         
-        combination.extend(permutations(x[1].keys(), 2))
-        
-        
+        combination.extend(permutations(x[1].keys(), 2)) #get permutations of all items in counter list
         
         for index, element in enumerate(combination):
             
-            if (element[1],element[0]) in final_pairs.keys():
+            if (element[1],element[0]) in final_pairs.keys(): #if reverse duplicate exists then skip it
                 continue
             final_pairs[element] = min(x[1][element[0]],x[1][element[1]])
             
        
         return final_pairs
-
     
-#     print("7")
+    #Output Type:  [(str, str): int , (str,str): 1] 
     flight_filtered_pairs = flight_filter_count.map(getPairs)
-    
-#     print(flight_filtered_pairs.collect()) #five
-    
-    
-#     print("8")
-    
-    airlines_keys_values = flight_filtered_pairs.flatMap(lambda x : [(k, v) for k, v in x.items()])
-    
-    
 
-#     print(airlines_keys_values.collect()) #six
-    
-    
-#     print("9")
-    
-#     print(airlines_keys_values.groupByKey().collect())
-    
-#     print(airlines_keys_values.values().collect())
-    
-#     airlines_keys_values_reduce = airlines_keys_values.reduceByKey(lambda x,y : x+y)
-    
-    
-    print("final")
-    
+        
+    #Output Type:  [((str, str), int) , ((str,str), 1) .. ] 
+    airlines_keys_values = flight_filtered_pairs.flatMap(lambda x : [(k, v) for k, v in x.items()])
+
+    #Output Type:  [((str, str), int) , ((str,str), 1) .. ]    
     airlines_keys_values_reduce = airlines_keys_values.reduceByKey(lambda x,y : x+y)
     
-#     print(airlines_keys_values_reduce.collect()) #seven
-
-    
-    
-#     print("final")
-    
-#    print(airlines_keys_values.collect())
-
-#     print(airlines_keys_values.reduceByKey(add).collect())
-
-    return(airlines_keys_values_reduce)
-    
-
-
-
-
-
-    
-    
-
-                                  
-                                  
-                                              
-
-
+    #Output Type:  [((str, str), int) , ((str,str), 1) .. ]    
+    airlines_key_sorted = airlines_keys_values_reduce.sortByKey()
+        
+    return(airlines_key_sorted)
     
 
 
@@ -210,52 +101,18 @@ def air_flights_most_canceled_flights(flights: DataFrame) -> str:
     :param flights: Spark DataFrame of the flights CSV file.
     :return: The name of the airline with most canceled flights on Sep. 2021.
     """
-    
-#     flights.printSchema()
-   
-#     print('Number of rows in dataset:', flights.count())
+
     flight_cancelled = flights.select('Airline', 'Cancelled','Month')
     
-#     flight_cancelled.show()
-
     cancelled_flights = flights.filter((flights.Cancelled == True) & (flights.Month == 9))
+    
     flight_cancelled = cancelled_flights.select('Airline', 'Cancelled','Month')
-
-#     print(flight_cancelled.show())
     
-#     print(flight_cancelled.count())
-#     titanic.agg({'Age': 'min'})
-#     flights_withcount= flight_cancelled.groupBy('Airline').count().orderBy('count')
-    
-    flights_withcount= flight_cancelled.groupBy('Airline').count()
-    
+    flights_withcount= flight_cancelled.groupBy('Airline').count()   
     
     flight_with_max_cancelled = flights_withcount.orderBy(col("count").desc()).first()
     
-#     print("cancelled flight")
-    
-#     print(flight_with_max_cancelled.Airline)
-    
-#     print(calc.show())
-   
-    
-#     sort(desc("count_cancelled"))
-    
-#     flights_data = flights_withcount.collect()
-    
-#     print(flights_data)
-    
-#     print(flights_data[0].Airline)
-
-    
-    
-#     print(flight_cancelled.show())
-
-
     return flight_with_max_cancelled.Airline
-
-
-#     raise NotImplementedError("Your Implementation Here.")
 
 
 def air_flights_diverted_flights(flights: DataFrame) -> int:
@@ -265,16 +122,13 @@ def air_flights_diverted_flights(flights: DataFrame) -> int:
     :param flights: Spark DataFrame of the flights CSV file.
     :return: The number of diverted flights between 20-30 Nov. 2021.
     """
-#     flights.printSchema()
     
     dates = ('2021-11-20', '2021-11-30')
 
-    #filter DataFrame to only show rows between start and end dates
     diverted_flights_filter = flights.filter(flights.FlightDate.between(*dates) & flights.Diverted == True)
 
     diverted_flights = diverted_flights_filter.select('Airline', 'Diverted')
 
-#     print(diverted_flights.show())
     return diverted_flights.count()
 
 def air_flights_avg_airtime(flights: DataFrame) -> float:
@@ -285,25 +139,13 @@ def air_flights_avg_airtime(flights: DataFrame) -> float:
     :return: The average airtime average airtime of the flights from Nashville, TN to
     Chicago, IL.
     """
-#     flights.printSchema()
     nashville_chicago_flights_filter = flights.filter((flights.OriginCityName == 'Nashville, TN') & (flights.DestCityName == 'Chicago, IL'))
-
-    nashville_chicago_flights = nashville_chicago_flights_filter.select('OriginCityName', 'DestCityName','ActualElapsedTime')
-
-#     nashville_chicago_flights.show()
-    nashville_avg_time = nashville_chicago_flights_filter.agg({'ActualElapsedTime': 'avg'}).collect()[0]['avg(ActualElapsedTime)']
-
-#     nashville_chicago_flights_filter.avg('ActualElapsedTime').show()
-
-#     avg_time_df.collect()[0]['avg_time']
-
-#     print(nashville_avg_time)
     
+    nashville_chicago_flights = nashville_chicago_flights_filter.select('OriginCityName', 'DestCityName','AirTime')
+
+    nashville_avg_time = nashville_chicago_flights_filter.agg({'AirTime': 'avg'}).collect()[0]['avg(AirTime)']
+
     return nashville_avg_time
-
-    
-    
-#     raise NotImplementedError("Your Implementation Here.")
 
 
 def air_flights_missing_departure_time(flights: DataFrame) -> int:
@@ -313,26 +155,17 @@ def air_flights_missing_departure_time(flights: DataFrame) -> int:
     :param flights: Spark DataFrame of the flights CSV file.
     :return: the number of unique dates where DepTime is missing.
     """
-#     raise NotImplementedError("Your Implementation Here.")
-
 
     flights_nullDeptime = flights.filter(flights.DepTime.isNull())
-    
-    
+        
     flights_to_process = flights_nullDeptime.select('Airline','FlightDate','DepTime')
     
-#     print(flights_to_process.select('FlightDate').distinct().count())
-    
     return flights_to_process.select('FlightDate').distinct().count()
-    
-#     print(flights_to_process.show())
 
 
 def main():
     # initialize SparkContext and SparkSession
-    #sc = SparkContext(spark_context)
-
-    sc = SparkContext.getOrCreate()
+    sc = SparkContext(spark_context)
     spark = SparkSession.builder.getOrCreate()
     
     
