@@ -1,17 +1,5 @@
 2021-12-10,Southwest Airlines Co.,IAH
-2021-12-10,Southwest Airlines Co.,IAH
-2021-12-10,Southwest Airlines Co.,IAH
 2021-12-10,American Airlines Inc.,IAH
-2021-12-10,American Airlines Inc.,AMA
-2021-12-10,Delta Air Lines Inc.,IAH
-2021-08-29,Delta Air Lines Inc.,LGA
-2021-09-29,Delta Air Lines Inc.,LGA
-2021-09-29,Hawaiian Airlines Inc.,LGA
-2021-09-29,Hawaiian Airlines Inc.,LGA
-2021-0-29,Hawaiian Airlines Inc.,LGA
-2021-08-29,Hawaiian Airlines Inc.,LGA
-2021-04-23,Hawaiian Airlines Inc.,OGG
-2021-04-22,Hawaiian Airlines Inc.,OGG
 2021-12-15,Southwest Airlines Co.,IAX
 2021-12-15,Southwest Airlines Co.,IAX
 2021-12-15,Southwest Airlines Co.,IAX
