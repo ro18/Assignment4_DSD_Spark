@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pyspark import RDD, SparkContext
 from collections import Counter
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col,desc,lit
+from pyspark.sql.functions import col,desc
 
 
 ### install dependency ###
@@ -16,7 +16,6 @@ from pyspark.sql.functions import col,desc,lit
 ### please update your relative path while running your code ###
 temp_airline_textfile = r'C:\Code\DSD\Assignment4_DSD_Spark\flights_data.txt'
 temp_airline_csvfile = r"C:\Code\DSD\Assignment4_DSD_Spark\Combined_Flights_2021.csv"
-temp_airline_csvfile = r"C:\Code\DSD\Assignment4_DSD_Spark\TestFlights.csv"
 
 
 default_spark_context = "local[*]"  # only update if you need
@@ -208,16 +207,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-#### Data CLeaning for rows with no origin mentioned- NExt time
-# import csv
-# from pyspark.sql.types import StringType
-
-# df = sc.textFile("test2.csv")\
-#            .mapPartitions(lambda line: csv.reader(line,delimiter=',', quotechar='"')).filter(lambda line: len(line)>=2 and line[0]!= 'Col1')\
-#            .toDF(['Col1','Col2'])
-
-######
